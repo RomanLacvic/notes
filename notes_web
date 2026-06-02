@@ -1,0 +1,154 @@
+import json
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QListWidget, QLineEdit, QTextEdit, QInputDialog, QHBoxLayout, QVBoxLayout, QFormLayout
+app=QApplication([])
+main_win=QWidget()
+text=QTextEdit()
+list_text=QLabel('Список заметок')
+w_list=QListWidget()
+create_note=QPushButton('Создать заметку')
+remove_note=QPushButton('Удалить заметку')
+save_note=QPushButton('Сохранить заметку')
+tags_text=QLabel('Список тегов')
+list_tag=QListWidget()
+enter_tag=QLineEdit()
+enter_tag.setPlaceholderText('Введите тег...')
+add_to_note=QPushButton('Добавить к заметке')
+remove_from_note=QPushButton('Открепить от заметки')
+search_tag=QPushButton('Искать по тегу')
+
+H_line1=QHBoxLayout()
+H_line1.addWidget(create_note)
+H_line1.addWidget(remove_note)
+H_line2=QHBoxLayout()
+H_line2.addWidget(save_note)
+H_line3=QHBoxLayout()
+H_line3.addWidget(add_to_note)
+H_line3.addWidget(remove_from_note)
+H_line4=QHBoxLayout()
+H_line4.addWidget(search_tag)
+
+V_line1=QVBoxLayout()
+V_line1.addWidget(text)
+V_line2=QVBoxLayout()
+V_line2.addWidget(list_text)
+V_line2.addWidget(w_list)
+V_line2.addLayout(H_line1)
+V_line2.addLayout(H_line2)
+V_line2.addWidget(tags_text)
+V_line2.addWidget(list_tag)
+V_line2.addWidget(enter_tag)
+V_line2.addLayout(H_line3)
+V_line2.addLayout(H_line4)
+
+H_main=QHBoxLayout()
+H_main.addLayout(V_line1)
+H_main.addLayout(V_line2)
+main_win.setLayout(H_main)
+'''notes={
+    'спорт':{
+        'текст':'спорт-сила',
+        'теги':['#спорт','#здоровье']
+    }
+    
+}
+
+with open('notes.json','w',encoding='utf-8') as file:
+    json.dump(notes,file,ensure_ascii=False)'''
+
+def show_note():
+    name=w_list.selectedItems()[0].text()
+    text.setText(notes[name]['текст'])
+    list_tag.clear()
+    list_tag.addItems(notes[name]['теги'])
+def add_note():
+    name_note, ok =QInputDialog.getText(main_win,'добавить заметку','Введите заметку')
+    if ok and name_note != '':
+        notes[name_note]={'текст':'','теги':[]}
+        w_list.addItem(name_note)
+    
+def save():
+    if w_list.selectedItems():
+        name=w_list.selectedItems()[0].text()
+        notes[name]['текст']=text.toPlainText()
+        with open('notes.json','w',encoding='utf-8') as file:
+            json.dump(notes,file,ensure_ascii=False)
+    else:
+        print('Заметка для сохранения не выбрана')
+
+def del_note():
+    if w_list.selectedItems():
+        name=w_list.selectedItems()[0].text()
+        del notes[name]
+        w_list.clear()
+        list_tag.clear()
+        text.clear()
+        w_list.addItems(notes)
+        with open('notes.json','w',encoding='utf-8') as file:
+            json.dump(notes,file,ensure_ascii=False)
+    else:
+        print('Заметка для удаления не выбрана')
+
+def addtag():
+    if w_list.selectedItems():
+        name=w_list.selectedItems()[0].text()
+        tag=enter_tag.text()
+        if not tag in notes[name]['теги']:
+            notes[name]['теги'].append(tag)
+            list_tag.addItem(tag)
+            enter_tag.clear()
+        with open('notes.json','w',encoding='utf-8') as file:
+            json.dump(notes,file,ensure_ascii=False)
+    else:
+        print('Заметка для добавления тега не выбрана')
+
+def deltag():
+    if w_list.selectedItems():
+        name=w_list.selectedItems()[0].text()
+        tag=list_tag.selectedItems()[0].text()
+        notes[name]['теги'].remove(tag)
+        list_tag.clear()
+        list_tag.addItems(notes[name]['теги'])
+        with open('notes.json','w',encoding='utf-8') as file:
+            json.dump(notes,file,ensure_ascii=False)
+    else:
+        print('Заметка для добавления тега не выбрана')
+
+def searchtag():
+    tag=enter_tag.text()
+    if search_tag.text()== 'Искать по тегу' and tag:
+        note_filter=dict()
+        for note in notes:
+            if tag in notes[note]['теги']:
+                note_filter[note]=notes[note]
+        w_list.clear()
+        list_tag.clear()
+        w_list.addItems(note_filter)
+        search_tag.setText('Сбросить поиск')
+    elif search_tag.text()=='Сбросить поиск':
+        w_list.clear()
+        list_tag.clear()
+        enter_tag.clear()
+        w_list.addItems(notes)
+        search_tag.setText('Искать по тегу')
+        
+with open('notes.json','r',encoding='utf-8') as file:
+    notes=json.load(file)
+w_list.addItems(notes)
+w_list.itemClicked.connect(show_note)
+create_note.clicked.connect(add_note)
+save_note.clicked.connect(save)
+remove_note.clicked.connect(del_note)
+add_to_note.clicked.connect(addtag)
+remove_from_note.clicked.connect(deltag)
+search_tag.clicked.connect(searchtag)
+
+
+
+
+
+main_win.show()
+app.exec_()
+
+
+
